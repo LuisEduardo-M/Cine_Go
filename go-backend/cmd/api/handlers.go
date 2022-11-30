@@ -32,6 +32,16 @@ func (app *application) AllMovies(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) Authenticate(w http.ResponseWriter, r *http.Request) {
 	// Read JSON payload
+	var requestPayload struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := app.readJSON(w, r, &requestPayload)
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
 
 	// Check if user exists in database
 
