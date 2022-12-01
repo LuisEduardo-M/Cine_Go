@@ -3,8 +3,9 @@ package dbrepo
 import (
 	"context"
 	"database/sql"
-	"github.com/LuisEduardo-M/Cine_Go/internal/models"
 	"time"
+
+	"github.com/LuisEduardo-M/Cine_Go/internal/models"
 )
 
 type PostgresDBRepo struct {
@@ -59,4 +60,30 @@ func (m *PostgresDBRepo) AllMovies() ([]*models.Movie, error) {
 	}
 
 	return movies, nil
+}
+
+func (m *PostgresDBRepo) GetUserByEmail(email string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `SELECT id, email, first_name, last_name, password, created_at, updated_at FROM users WHERE email = $1`
+
+	var user models.User
+	row := m.DB.QueryRowContext(ctx, query, email)
+
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.FirstName,
+		&user.LastName,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
