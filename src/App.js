@@ -14,7 +14,19 @@ const App = () => {
     const navigate = useNavigate();
 
     const logout = () => {
-        setJwtToken("");
+        const requestOptions = {
+            method: "GET",
+            credentials: "include",
+        }
+
+        fetch(`/logout`, requestOptions)
+        .catch(error => {
+            console.log("error logging out", error);
+            
+        })
+        .finally(() => {
+            setJwtToken("");
+        })
         navigate("/login");
     }
 
