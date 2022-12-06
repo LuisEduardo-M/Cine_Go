@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -12,11 +14,11 @@ type Auth struct {
 	Issuer        string
 	Audience      string
 	Secret        string
+	TokenExpiry   time.Duration
+	RefreshExpiry time.Duration
 	CookieDomain  string
 	CookiePath    string
 	CookieName    string
-	RefreshExpiry time.Duration
-	TokenExpiry   time.Duration
 }
 
 type jwtUser struct {
@@ -106,4 +108,54 @@ func (j *Auth) GetExpiredRefreshCookie() *http.Cookie {
 		HttpOnly: true,
 		Secure:   true,
 	}
+}
+
+func (j *Auth) GetTokenFromHeaderAndVerify(w http.ResponseWriter, r *http.Request) (string, *Claims, error) {
+	w.Header().Add("Vary", "Authorization")
+
+	// Get Auth header
+	authHeader := r.Header.Get("Authorization")
+
+	// Check if authHeader is empty
+	if authHeader == "" {
+		return "", nil, errors.New("no auth header")
+	}
+
+	// Split the header on spaces
+	headersParts := strings.Split(authHeader, " ")
+	if len(headersParts) != 2 {
+		return "", nil, errors.New("invalid auth header")
+	}
+
+	// Check if we have the work Bearer
+	if headersParts[0] != "Bearer" {
+		return "", nil, errors.New("invalid auth header")
+	}
+
+	token := headersParts[1]
+
+	// Declare an empty claims
+	claims := &Claims{}
+
+	// Parse the Token
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(j.Secret), nil
+	})
+
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "token is expired by") {
+			return "", nil, errors.New("expired token")
+		}
+
+		return "", nil, err
+	}
+
+	if claims.Issuer != j.Issuer {
+		return "", nil, errors.New("invalid issuer")
+	}
+
+	return token, claims, nil
 }
