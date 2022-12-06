@@ -9,12 +9,13 @@ const Login = () => {
     const { setJwtToken } = useOutletContext();
     const { setAlertMessage } = useOutletContext();
     const { setAlertClassName } = useOutletContext();
+    const { toggleRefresh } = useOutletContext();
 
     const navigate = useNavigate();
 
     const handleSubmit = event => {
         event.preventDefault();
-        
+
         // Build the request payload
         let payload = {
             email: email,
@@ -31,22 +32,23 @@ const Login = () => {
         }
 
         fetch(`/authenticate`, requestOptions)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    setAlertClassName("alert-danger");
+                    setAlertMessage(data.message);
+                } else {
+                    setJwtToken(data.access_token);
+                    setAlertClassName("d-none");
+                    setAlertMessage("");
+                    toggleRefresh(true);
+                    navigate("/");
+                }
+            })
+            .catch(error => {
                 setAlertClassName("alert-danger");
-                setAlertMessage(data.message);
-            } else {
-                setJwtToken(data.access_token);
-                setAlertClassName("d-none");
-                setAlertMessage("");
-                navigate("/");
-            }
-        })
-        .catch(error => {
-            setAlertClassName("alert-danger");
-            setAlertMessage(error);
-        })
+                setAlertMessage(error);
+            })
     }
 
     return (
