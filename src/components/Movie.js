@@ -8,7 +8,7 @@ const Movie = () => {
 
     useEffect(() => {
         const headers = new Headers();
-        headers.append("Content-Type", "applicatio/json");
+        headers.append("Content-Type", "application/json");
 
         const requestOptions = {
             method: "GET",
@@ -40,7 +40,7 @@ const Movie = () => {
             ))}
             <hr />
 
-            {movie.image !== "" && 
+            {movie.image !== "" &&
                 <div className="mb-3">
                     <img src={`http://image.tmdb.org/t/p/w200/${movie.image}`} alt="movie_poster" />
                 </div>
