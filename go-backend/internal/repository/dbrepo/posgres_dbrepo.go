@@ -90,7 +90,7 @@ func (m *PostgresDBRepo) OneMovie(id int) (*models.Movie, error) {
 	// Get genres, if any
 	query = `SELECT g.id, g.genre FROM movies_genres mg
 		LEFT JOIN genres g ON (mg.genre_id = g.id)
-		WHERE mg.movie_id $1
+		WHERE mg.movie_id = $1
 		ORDER BY g.genre
 	`
 	rows, err := m.DB.QueryContext(ctx, query, id)
@@ -146,7 +146,7 @@ func (m *PostgresDBRepo) OneMovieForEdit(id int) (*models.Movie, []*models.Genre
 	// Get genres, if any
 	query = `SELECT g.id, g.genre FROM movies_genres mg
 		LEFT JOIN genres g ON (mg.genre_id = g.id)
-		WHERE mg.movie_id $1
+		WHERE mg.movie_id = $1
 		ORDER BY g.genre
 	`
 	rows, err := m.DB.QueryContext(ctx, query, id)
@@ -197,6 +197,38 @@ func (m *PostgresDBRepo) OneMovieForEdit(id int) (*models.Movie, []*models.Genre
 	}
 
 	return &movie, allGenres, nil
+}
+
+func (m *PostgresDBRepo) AllGenres() ([]*models.Genre, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `SELECT id, genre, created_at, updated_at FROM genres ORDER BY genre`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []*models.Genre
+
+	for rows.Next() {
+		var g models.Genre
+		err := rows.Scan(
+			&g.ID,
+			&g.Genre,
+			&g.CreatedAt,
+			&g.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		genres = append(genres, &g)
+	}
+
+	return genres, nil
 }
 
 func (m *PostgresDBRepo) GetUserByEmail(email string) (*models.User, error) {
