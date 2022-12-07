@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2'
 import Input from "./form/Input";
 import Select from "./form/Select";
 import TextArea from "./form/TextArea";
@@ -38,14 +39,13 @@ const EditMovie = () => {
     }
 
     useEffect(() => {
-        // Not authorized
         if (jwtToken === "") {
             navigate("/login");
             return;
         }
 
         if (id === 0) {
-            // Adding a movie
+            // adding a movie
             setMovie({
                 id: 0,
                 title: "",
@@ -54,10 +54,9 @@ const EditMovie = () => {
                 mpaa_rating: "",
                 description: "",
                 genres: [],
-                genresArray: [Array(13).fill(false)],
-            });
+                genres_array: [Array(13).fill(false)],
+            })
 
-            // Getting all genres
             const headers = new Headers();
             headers.append("Content-Type", "application/json");
 
@@ -67,8 +66,8 @@ const EditMovie = () => {
             }
 
             fetch(`/genres`, requestOptions)
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     const checks = [];
 
                     data.forEach(g => {
@@ -76,23 +75,54 @@ const EditMovie = () => {
                     })
 
                     setMovie(m => ({
-                        ...movie,
+                        ...m,
                         genres: checks,
                         genres_array: [],
-                    }));
+                    }))
                 })
                 .catch(err => {
                     console.log(err);
                 })
         } else {
-            // Editing an existing movie
-
+            // editing an existing movie
         }
 
     }, [id, jwtToken, navigate])
 
     const handleSubmit = event => {
         event.preventDefault();
+
+        let errors = [];
+        let required = [
+            {field: movie.title, name: "title"},
+            {field: movie.release_date, name: "release_date"},
+            {field: movie.runtime, name: "runtime"},
+            {field: movie.description, name: "description"},
+            {field: movie.mpaa_rating, name: "mpaa_rating"},
+        ];
+
+        required.forEach(function (obj) {
+            if (obj.field === "") {
+                errors.push(obj.name);
+            }
+        })
+
+        // Genres error validation
+        if (movie.genres_array.length === 0) {
+            Swal.fire({
+                title: "Error!",
+                text: "You must choose at least one genre!",
+                icon: "error",
+                confirmButtonText: "OK",
+            })
+            errors.push("genres");
+        }
+
+        setErrors(errors);
+
+        if (errors.length > 0) {
+            return false;
+        }
     }
 
     const hasError = key => {
@@ -109,19 +139,27 @@ const EditMovie = () => {
         })
     }
 
-    const handleCheck = (event, pos) => {
-        console.log("handleCheck called");
-        console.log(event.target.value);
-        console.log("checked is:", event.target.checked);
-        console.log("position is:", pos);
+    const handleCheck = (event, position) => {
+        let tmpArr = movie.genres;
+        tmpArr[position].checked = !tmpArr[position].checked;
+
+        let tmpIDs = movie.genres_array;
+        if (!event.target.checked) {
+            tmpIDs.splice(tmpIDs.indexOf(event.target.value));
+        } else {
+            tmpIDs.push(parseInt(event.target.value, 10));
+        }
+
+        setMovie({
+            ...movie,
+            genres_array: tmpIDs,
+        })
     }
 
     return (
         <div>
             <h2>Add/Edit Movie</h2>
             <hr />
-            <pre>{JSON.stringify(movie, null, 3)}</pre>
-
             <form onSubmit={handleSubmit}>
                 <input type="hidden" name="id" value={movie.id} id="id"></input>
 
@@ -193,15 +231,19 @@ const EditMovie = () => {
                             <CheckBox
                                 title={g.genre}
                                 name={"genre"}
+                                value={g.id}
                                 key={index}
                                 id={"genre-" + index}
                                 onChange={event => handleCheck(event, index)}
-                                value={g.id}
                                 checked={movie.genres[index].checked}
                             />
                         )}
                     </>
                 }
+
+                <hr />
+
+                <button className='btn btn-primary'>Save</button>
 
             </form>
         </div>
