@@ -20,10 +20,11 @@ func (app *application) routes() http.Handler {
 	// Routes
 	mux.Get("/", app.Home)
 	mux.Get("/movies", app.AllMovies)
-	mux.Get("/movie/{id}", app.GetMovie)
+	mux.Get("/movies/{id}", app.GetMovie)
 	mux.Post("/authenticate", app.Authenticate)
 	mux.Get("/refresh", app.RefreshToken)
 	mux.Get("/logout", app.Logout)
+	mux.Get("/genres", app.AllGenres)
 
 	// Authorization Middleware
 	mux.Route("/admin", func(mux chi.Router) {
@@ -31,6 +32,7 @@ func (app *application) routes() http.Handler {
 
 		mux.Get("/movies", app.MovieCatalog)
 		mux.Get("/movies/{id}", app.MovieForEdit)
+		mux.Put("/movies/0", app.InsertMovie)
 	})
 
 	return mux
