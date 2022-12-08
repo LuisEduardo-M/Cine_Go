@@ -11,6 +11,7 @@ import Login from './components/Login';
 import ManageCatalogue from './components/ManageCatalogue';
 import Movies from './components/Movies';
 import Movie from './components/Movie';
+import OneGenre from './components/OneGenre';
 
 // RouterProvider -> router -> App -> Outlet
 const router = createBrowserRouter([
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
             {
                 path: "/genres",
                 element: <Genres />,
+            },
+            {
+                path: "/genres/:id",
+                element: <OneGenre />,
             },
             {
                 path: "/admin/movie/0",
