@@ -87,28 +87,6 @@ func New(movies []*models.Movie) *Graph {
 				return list, nil
 			},
 		},
-
-		"get": &graphql.Field{
-			Type:        movieType,
-			Description: "Get movie by ID",
-			Args: graphql.FieldConfigArgument{
-				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
-				},
-			},
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				id, ok := p.Args["id"].(int)
-				if ok {
-					for _, movie := range movies {
-						if movie.ID == id {
-							return movie, nil
-						}
-					}
-				}
-
-				return nil, nil
-			},
-		},
 	}
 
 	return &Graph{

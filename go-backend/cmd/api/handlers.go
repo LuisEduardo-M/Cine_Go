@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/LuisEduardo-M/Cine_Go/internal/graph"
 	"github.com/LuisEduardo-M/Cine_Go/internal/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v4"
@@ -362,4 +363,30 @@ func (app *application) AllMoviesByGenre(w http.ResponseWriter, r *http.Request)
 	}
 
 	app.writeJSON(w, http.StatusOK, movies)
+}
+
+func (app *application) MoviesGraphQL(w http.ResponseWriter, r *http.Request) {
+	// Populating the Graph type with movies
+	movies, _ := app.DB.AllMovies()
+
+	// Get the query from request
+	q, _ := io.ReadAll(r.Body)
+	query := string(q)
+
+	// Create a new variable of type *graph.Graph and assign to query
+	g := graph.New(movies)
+	g.QueryString = query
+
+	// Execute the query
+	resp, err := g.Query()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	// Send the response
+	j, _ := json.MarshalIndent(resp, "", "\t")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
 }

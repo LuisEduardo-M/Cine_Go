@@ -21,7 +21,7 @@ const App = () => {
             credentials: "include",
         }
 
-        fetch(`/logout`, requestOptions)
+        fetch(`${process.env.REACT_APP_BACKEND}/logout`, requestOptions)
             .catch(error => {
                 console.log("error logging out", error);
 
@@ -34,8 +34,6 @@ const App = () => {
     }
 
     const toggleRefresh = useCallback(status => {
-        console.log("clicked");
-
         if (status) {
             console.log("turning on ticking");
             let i = setInterval(() => {
@@ -44,7 +42,7 @@ const App = () => {
                     credentials: "include",
                 }
 
-                fetch(`/refresh`, requestOptions)
+                fetch(`${process.env.REACT_APP_BACKEND}/refresh`, requestOptions)
                     .then(response => response.json())
                     .then(data => {
                         if (data.access_token) {
@@ -56,10 +54,7 @@ const App = () => {
                     })
             }, 600000); // 1 Hour
             setTickInterval(i);
-            console.log("setting tick interval to: ", i);
         } else {
-            console.log("turning off ticking!");
-            console.log("turning off tickInterval", tickInterval);
             setTickInterval(null);
             clearInterval(tickInterval);
         }
