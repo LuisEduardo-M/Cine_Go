@@ -35,7 +35,6 @@ const App = () => {
 
     const toggleRefresh = useCallback(status => {
         if (status) {
-            console.log("turning on ticking");
             let i = setInterval(() => {
                 const requestOptions = {
                     method: "GET",
